@@ -15,6 +15,7 @@
 
 int main(int argc, char *argv[])
 {
+    // 连接信息对象
     struct addrinfo hint, *result;
     struct sockaddr remote;
     struct timeval timeout = {0, 0};
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
         perror("error : cannot get socket address!\n");
         exit(1);
     }
-
+    // 创建一个socket,返回一个socket对应的文件描述符。
     master_socket = socket(result->ai_family, result->ai_socktype,
                            result->ai_protocol);
     if (master_socket == -1) {
@@ -41,18 +42,21 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
+    // 将本地的socket和ip端口进行绑定，即为上面创建socket指定一个地址。
     res = bind(master_socket, result->ai_addr, result->ai_addrlen);
     if (res == -1) {
         perror("error : cannot bind the socket with the given address!\n");
         exit(1);
     }
 
+    // 被指定了地址的socket并不能接受客户端的连接，还需要通过如下调用，为该socket创建一个监听队列来存放等待处理的客户端连接。
     res = listen(master_socket, SOMAXCONN);
     if (res == -1) {
         perror("error : cannot listen at the given socket!\n");
         exit(1);
     }
 
+    // 清空客户端连接列表。
     memset(client_sockets, 0, sizeof(client_sockets));
 
     addrlen = sizeof(struct sockaddr);
@@ -73,7 +77,14 @@ int main(int argc, char *argv[])
                 max_sd = sd;
             }
         }
-        
+        /*参数列表：
+		* 返回值：可用文件描述符的个数。
+		* 1.nfds        指定被监听的文件描述符的总数，通常会设置为所要监听的文件描述符的最大值+1，因为文件描述符是从0开始的。
+		* 2.readset     用来检查可读性的一组文件描述符集合。
+		* 3.writeset     用来检查可写性的一组文件描述符集合。
+		* 4.exceptset  用来检查是否有异常条件出现的文件描述符集合。
+		* 5.timeout      超时，填NULL为阻塞，填0为非阻塞，其他为一段超时时间
+		*/
         res = select(max_sd + 1, &readfds, NULL, NULL, NULL);
         if ( res < 0) {
             perror("error : func select error");

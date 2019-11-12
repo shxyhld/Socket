@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
         perror("error : cannot get socket file descriptor!\n");
         exit(1);
     }
-
+    // 客户端向服务器发起连接请求，返回0表示成功，sfd为和服务器建立连接的socket文件描述符。
     res = connect(sfd, result->ai_addr, result->ai_addrlen);
     if (res == -1) {
         perror("error : cannot connect the server!\n");
